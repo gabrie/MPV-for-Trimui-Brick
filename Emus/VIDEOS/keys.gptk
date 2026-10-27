@@ -1,18 +1,11 @@
 # gptokeyb2 configuration for mpv on TrimUI Brick
 # Maps gamepad buttons to standard mpv keyboard controls
 
-[config]
-# 连按参数配置 (毫秒)
-# 首次按住触发连发的延迟：300ms
-repeat_delay = 300
-# 连发频率：每 100ms 触发一次前进/后退
-repeat_rate = 100
-
 # D-Pad: Seeking
-# 上/下键：单次步进快退/快进 60 秒 (不连发)
+# up / down: seek 60 seconds (single-shot, no repeat)
 up = up
 down = down
-# 左/右键：按住不放连续快退/快进 5 秒 (启用 repeat 连发)
+# left / right: seek 5 seconds (continuous auto-repeat when held)
 left = repeat left
 right = repeat right
 
@@ -20,8 +13,9 @@ right = repeat right
 # A / B: Play / Pause (space)
 a = space
 b = space
-# X / Y: Zoom / Panscan controls (保持方案3与对调)
+# X: Zoom / Fill to Vertical Axis (x in mpv)
 x = x
+# Y: Zoom / Fill to Horizontal Axis (y in mpv)
 y = y
 
 # Shoulder buttons
