@@ -47,8 +47,74 @@ fi
 
 echo 1 > /tmp/stay_awake
 
-# 启动 mpv 播放器 (启用流媒体网络缓冲优化)
-HOME="$progdir" /mnt/SDCARD/System/bin/mpv "$@"   --fullscreen   --audio-buffer=1   --cache=yes   --demuxer-max-bytes=100M   --demuxer-readahead-secs=15   --terminal=no
+# 查找同目录下前一个/后一个有效视频文件 (支持 R2/L2 切集)
+find_sibling() {
+  action="$1"
+  file="$2"
+  dir=$(dirname "$file")
+  
+  prev=""
+  match_next=0
+  target=""
+  
+  for f in "$dir"/*; do
+    [ -f "$f" ] || continue
+    case "$f" in
+      *.mp4|*.mkv|*.avi|*.mpg|*.mpeg|*.wmv|*.asf|*.rm|*.rmvb|*.m4v|*.ts|*.m3u|*.m3u8|*.flv) ;;
+      *) continue ;;
+    esac
+    
+    if [ "$action" = "next" ]; then
+      if [ "$match_next" -eq 1 ]; then
+        target="$f"
+        break
+      fi
+      if [ "$f" = "$file" ]; then
+        match_next=1
+      fi
+    elif [ "$action" = "prev" ]; then
+      if [ "$f" = "$file" ]; then
+        target="$prev"
+        break
+      fi
+      prev="$f"
+    fi
+  done
+  echo "$target"
+}
+
+# 循环播放控制器：
+# 正常退出 / 主动退出 (code 0 或非切集 code) -> 结束脚本返回系统界面
+# L2 触发 quit 41 -> 切到上一集
+# R2 触发 quit 42 -> 切到下一集
+current_video="$1"
+while [ -n "$current_video" ] && [ -f "$current_video" ]; do
+  HOME="$progdir" /mnt/SDCARD/System/bin/mpv "$current_video"     --fullscreen     --audio-buffer=1     --cache=yes     --demuxer-max-bytes=100M     --demuxer-readahead-secs=15     --terminal=no
+  ret=$?
+  
+  if [ "$ret" -eq 41 ]; then
+    # L2: 上一个视频
+    sibling=$(find_sibling prev "$current_video")
+    if [ -n "$sibling" ]; then
+      current_video="$sibling"
+    else
+      # 已经是第一集，不再循环，退出返回系统界面
+      break
+    fi
+  elif [ "$ret" -eq 42 ]; then
+    # R2: 下一个视频
+    sibling=$(find_sibling next "$current_video")
+    if [ -n "$sibling" ]; then
+      current_video="$sibling"
+    else
+      # 已经是最后一集，退出返回系统界面
+      break
+    fi
+  else
+    # 正常播放完毕或用户主动按键 (q, MENU 长按, 摇杆下压) 退出
+    break
+  fi
+done
 
 rm -f /tmp/stay_awake
 kill -9 $(pidof gptokeyb2) 2>/dev/null
