@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # ==============================================================================
-# sync_nas.sh - TrimUI Brick DLNA / UPnP 局域网视频同步脚本 (精准路径定位版)
+# sync_nas.sh - TrimUI Brick DLNA / UPnP 局域网视频同步脚本 (支持多 folder 设定版)
 # 协议：UPnP / DLNA ContentDirectory SOAP Browse
 # 输出实时记录到 /mnt/SDCARD/nas_sync.log
 # ==============================================================================
@@ -29,18 +29,17 @@ else
 fi
 
 get_cfg() {
-    awk -F "=" -v key="$1" '$1 ~ key {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}' "$config_file"
+    awk -F "=" -v key="$1" '$1 ~ key {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}' "$config_file"
 }
 
 NAS_IP=$(get_cfg "^ip")
 NAS_PORT=$(get_cfg "^port")
-TARGET_PATH=$(get_cfg "^folder")
 MAX_DEPTH=$(get_cfg "^max_depth")
 
 [ -z "$NAS_PORT" ] && NAS_PORT="50001"
 [ -z "$MAX_DEPTH" ] && MAX_DEPTH="2"
 
-log "Config: NAS_IP=$NAS_IP, NAS_PORT=$NAS_PORT, TARGET_PATH=$TARGET_PATH"
+log "Config: NAS_IP=$NAS_IP, NAS_PORT=$NAS_PORT, MAX_DEPTH=$MAX_DEPTH"
 
 if [ -z "$NAS_IP" ] || [ "$NAS_IP" = "192.168.x.x" ]; then
     log "ERROR: Invalid NAS IP in nas_config.ini!"
@@ -56,6 +55,17 @@ SOAP_URL="http://$NAS_IP:$NAS_PORT/ContentDirectory/control"
 TMP_DIR="/tmp/dlna_sync_$$"
 mkdir -p "$TMP_DIR"
 trap 'rm -rf "$TMP_DIR"' EXIT
+
+FOLDER_LIST_FILE="$TMP_DIR/folders.txt"
+awk -F "=" '
+/^[ \t]*#/ || /^[ \t]*;/ { next }
+$1 ~ /^[ \t]*folder[ \t]*$/ {
+    val = $2;
+    sub(/^[ \t]+/, "", val);
+    sub(/[ \t\r]+$/, "", val);
+    if (val != "") print val;
+}
+' "$config_file" > "$FOLDER_LIST_FILE"
 
 QUEUE_FILE="$TMP_DIR/queue.txt"
 touch "$QUEUE_FILE"
@@ -117,7 +127,7 @@ browse_didl() {
     ' "$b_out"
 }
 
-# 2. 定位视频起始容器 (群晖下为 Video 容器 33)
+# 2. 定位视频起始根容器 (群晖下为 Video 容器 33)
 log "Locating Video storage root container..."
 didl_0=$(browse_didl "0" 0 20)
 VIDEO_ROOT=$(echo "$didl_0" | awk '
@@ -135,60 +145,62 @@ if [ -z "$VIDEO_ROOT" ]; then
 fi
 log "Using Video root container ID: $VIDEO_ROOT"
 
-# 3. 逐级路径定位 (支持如 "video/火影忍者 剧场版11部" 或 "火影忍者 剧场版11部")
-CURRENT_CID="$VIDEO_ROOT"
-FINAL_FOLDER_NAME=""
-
-if [ -n "$TARGET_PATH" ]; then
-    log "Resolving target path: '$TARGET_PATH'..."
-    # 拆分路径段
-    OLD_IFS="$IFS"
-    IFS="/"
-    set -- $TARGET_PATH
-    IFS="$OLD_IFS"
-
-    for seg in "$@"; do
-        [ -z "$seg" ] && continue
-        log "Looking for subfolder '$seg' in container $CURRENT_CID..."
-        didl_sub=$(browse_didl "$CURRENT_CID" 0 100)
-        
-        MATCHED_ID=$(echo "$didl_sub" | awk -v seg="$seg" '
-        BEGIN { RS="<container "; FS=">" }
-        NR > 1 {
-            block = $0; id = ""; title = "";
-            if (match(block, /id="([^"]+)"/)) { id = substr(block, RSTART+4, RLENGTH-5); }
-            if (match(block, /<dc:title>([^<]+)<\/dc:title>/)) { title = substr(block, RSTART+10, RLENGTH-21); }
-            if (title == seg || tolower(title) == tolower(seg)) { print id; exit; }
-        }
-        ')
-
-        if [ -n "$MATCHED_ID" ]; then
-            log "Resolved '$seg' -> Container ID $MATCHED_ID"
-            CURRENT_CID="$MATCHED_ID"
-            FINAL_FOLDER_NAME="$seg"
-        else
-            log "Warning: Subfolder '$seg' not found directly. Will try recursive search."
-            break
-        fi
-    done
-fi
-
-log "Target root set to Container ID: $CURRENT_CID (Folder: '$FINAL_FOLDER_NAME')"
-
-# 4. 清理旧播放列表 (保留示例和 launch 脚本)
+# 3. 清理旧播放列表 (保留 launch 脚本与模板)
 log "Cleaning previous DLNA playlists in $romdir..."
 find "$romdir" -type f -name "*.m3u8" ! -name "nas-http-example.m3u8" -delete 2>/dev/null
 find "$romdir" -mindepth 1 -type d -empty -delete 2>/dev/null
 
-# 5. 抓取目标容器下的所有视频 (支持分页，单目录秒级完成)
-TOTAL_ITEMS=0
+# 4. 解析所有配置的 folder 路径并入队
+if [ -s "$FOLDER_LIST_FILE" ]; then
+    while IFS= read -r target_folder || [ -n "$target_folder" ]; do
+        [ -z "$target_folder" ] && continue
+        log "Resolving configured target folder: '$target_folder'..."
+        
+        cur_cid="$VIDEO_ROOT"
+        final_name=""
+        
+        OLD_IFS="$IFS"
+        IFS="/"
+        set -- $target_folder
+        IFS="$OLD_IFS"
 
-# 将起始节点推入队列
-if [ -n "$FINAL_FOLDER_NAME" ]; then
-    echo "$CURRENT_CID|1|$FINAL_FOLDER_NAME" > "$QUEUE_FILE"
+        resolved_ok=1
+        for seg in "$@"; do
+            [ -z "$seg" ] && continue
+            didl_sub=$(browse_didl "$cur_cid" 0 100)
+            
+            matched_id=$(echo "$didl_sub" | awk -v seg="$seg" '
+            BEGIN { RS="<container "; FS=">" }
+            NR > 1 {
+                block = $0; id = ""; title = "";
+                if (match(block, /id="([^"]+)"/)) { id = substr(block, RSTART+4, RLENGTH-5); }
+                if (match(block, /<dc:title>([^<]+)<\/dc:title>/)) { title = substr(block, RSTART+10, RLENGTH-21); }
+                if (title == seg || tolower(title) == tolower(seg)) { print id; exit; }
+            }
+            ')
+
+            if [ -n "$matched_id" ]; then
+                cur_cid="$matched_id"
+                final_name="$seg"
+            else
+                log "Warning: Folder segment '$seg' not found under container $cur_cid for path '$target_folder'."
+                resolved_ok=0
+                break
+            fi
+        done
+
+        if [ "$resolved_ok" -eq 1 ]; then
+            log "Successfully resolved '$target_folder' -> Container ID $cur_cid (Folder: '$final_name')"
+            echo "$cur_cid|1|$final_name" >> "$QUEUE_FILE"
+        fi
+    done < "$FOLDER_LIST_FILE"
 else
-    echo "$CURRENT_CID|1|" > "$QUEUE_FILE"
+    log "No specific folder configured. Scanning whole video root."
+    echo "$VIDEO_ROOT|1|" >> "$QUEUE_FILE"
 fi
+
+# 5. 抓取所有入队容器下的视频文件
+TOTAL_ITEMS=0
 
 while [ -s "$QUEUE_FILE" ]; do
     line=$(head -n 1 "$QUEUE_FILE")
@@ -207,7 +219,7 @@ EOF
     while :; do
         didl_cur=$(browse_didl "$c_id" "$start_idx" "$req_count")
 
-        # 5.1 提取视频文件
+        # 5.1 提取视频文件条目
         echo "$didl_cur" | awk '
         BEGIN { RS="<item "; FS=">" }
         NR > 1 {
@@ -227,7 +239,6 @@ EOF
         }
         ' > "$TMP_DIR/items.txt"
 
-        item_count=0
         while IFS="$(printf '\t')" read -r item_name item_url; do
             [ -z "$item_name" ] || [ -z "$item_url" ] && continue
             if [ -n "$c_path" ]; then
@@ -238,11 +249,10 @@ EOF
             mkdir -p "$target_d"
             printf "#EXTM3U\n%s\n" "$item_url" > "$target_d/$item_name.m3u8"
             TOTAL_ITEMS=$((TOTAL_ITEMS + 1))
-            item_count=$((item_count + 1))
             log "Created playlist: $c_path/$item_name.m3u8"
         done < "$TMP_DIR/items.txt"
 
-        # 5.2 若未达到深度限制，入队子容器
+        # 5.2 若未达到深度限制，入队子目录
         if [ "$c_depth" -lt "$MAX_DEPTH" ]; then
             echo "$didl_cur" | awk -v depth="$c_depth" -v base="$c_path" '
             BEGIN { RS="<container "; FS=">" }
