@@ -48,24 +48,7 @@ fi
 echo 1 > /tmp/stay_awake
 
 # 启动 mpv 播放器 (启用流媒体网络缓冲优化)
-target_file="$1"
-target_dir=$(dirname "$target_file")
-
-# 自动将同目录下所有视频加入播放列表，使 L2 / R2 能够切换上一集 / 下一集
-playlist_args=""
-if [ -d "$target_dir" ]; then
-  playlist_args="--playlist-start=$target_file"
-  # 遍历同目录下所有受支持的媒体文件构建播放列表
-  set -- "$target_dir"/*
-fi
-
-HOME="$progdir" /mnt/SDCARD/System/bin/mpv $playlist_args "$@" \
-  --fullscreen \
-  --audio-buffer=1 \
-  --cache=yes \
-  --demuxer-max-bytes=100M \
-  --demuxer-readahead-secs=15 \
-  --terminal=no
+HOME="$progdir" /mnt/SDCARD/System/bin/mpv "$@"   --fullscreen   --audio-buffer=1   --cache=yes   --demuxer-max-bytes=100M   --demuxer-readahead-secs=15   --terminal=no
 
 rm -f /tmp/stay_awake
 kill -9 $(pidof gptokeyb2) 2>/dev/null
