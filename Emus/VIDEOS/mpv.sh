@@ -34,26 +34,14 @@ fi
 
 "$progdir/gptokeyb2" -1 "mpv" -c "$progdir/keys.gptk" > "$progdir/gptokeyb2.log" 2>&1 &
 sleep 0.4
-
-# 创建 mpv FIFO 控制管道并启动 thd 物理硬件事件监听
-FIFO_PATH="/tmp/mpv.fifo"
-rm -f "$FIFO_PATH"
-mkfifo "$FIFO_PATH"
-
-# 启动 thd (直接监听 TrimUI Brick 物理输入设备 /dev/input/event3)
-if [ -f "$progdir/thd.conf" ]; then
-  if [ -e "/dev/input/event3" ]; then
-    /mnt/SDCARD/System/bin/thd --triggers "$progdir/thd.conf" /dev/input/event3 &
-  else
-    /mnt/SDCARD/System/bin/thd --triggers "$progdir/thd.conf" /dev/input/event* &
-  fi
+if [ -f "thd.conf" ] && [ -e "/dev/input/event3" ]; then
+  /mnt/SDCARD/System/bin/thd --triggers thd.conf /dev/input/event3 &
 fi
 
 echo 1 > /tmp/stay_awake
 
-# 启动 mpv 播放器 (启用 FIFO 控制管道与流媒体缓冲优化)
+# 启动 mpv 播放器 (启用网络流媒体缓冲优化)
 HOME="$progdir" /mnt/SDCARD/System/bin/mpv "$@" \
-  --input-file="$FIFO_PATH" \
   --fullscreen \
   --audio-buffer=1 \
   --cache=yes \
@@ -62,6 +50,5 @@ HOME="$progdir" /mnt/SDCARD/System/bin/mpv "$@" \
   --terminal=no
 
 rm -f /tmp/stay_awake
-rm -f "$FIFO_PATH"
 kill -9 $(pidof gptokeyb2) 2>/dev/null
 kill -9 $(pidof thd) 2>/dev/null
