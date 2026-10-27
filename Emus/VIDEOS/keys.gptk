@@ -22,9 +22,9 @@ y = 9
 # L1 / R1: Speed down / speed up by 10% ([ and ] in mpv)
 l1 = [
 r1 = ]
-# L2 / R2: Half / double playback speed ({ and } in mpv)
-l2 = {
-r2 = }
+# L2 / R2: Previous video / Next video (< and > in mpv)
+l2 = <
+r2 = >
 
 # System buttons
 # Start: Play / Pause (space)
