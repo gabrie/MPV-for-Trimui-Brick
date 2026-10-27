@@ -25,8 +25,15 @@ if [ "$extension" = "7z" ]; then
 fi
 
 # 启动按键映射与后台守护
-export SDL_GAMECONTROLLERCONFIG_FILE="$progdir/gamecontrollerdb.txt"
-"$progdir/gptokeyb2" -1 "mpv" -c "$progdir/keys.gptk" &
+if [ -f "/usr/lib/gamecontrollerdb.txt" ]; then
+  cat "/usr/lib/gamecontrollerdb.txt" "$progdir/gamecontrollerdb.txt" > /tmp/gamecontrollerdb.txt 2>/dev/null
+  export SDL_GAMECONTROLLERCONFIG_FILE="/tmp/gamecontrollerdb.txt"
+else
+  export SDL_GAMECONTROLLERCONFIG_FILE="$progdir/gamecontrollerdb.txt"
+fi
+
+"$progdir/gptokeyb2" -1 "mpv" -c "$progdir/keys.gptk" > "$progdir/gptokeyb2.log" 2>&1 &
+sleep 0.4
 if [ -f "thd.conf" ] && [ -e "/dev/input/event3" ]; then
   /mnt/SDCARD/System/bin/thd --triggers thd.conf /dev/input/event3 &
 fi

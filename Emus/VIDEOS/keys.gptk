@@ -1,66 +1,38 @@
-//Play / Pause
-start = enter
-a = enter
-b = enter
+# gptokeyb2 configuration for mpv on TrimUI Brick
+# Maps gamepad buttons to standard mpv keyboard controls
 
-//Volume + / -
-x = 0
-y = 9
-
-//previous track
-l1 = b
-
-//
-//l2_down = a
-
-//quit
-l3_down = q
-
-//next track
-r1 = n
-
-//
-//r2_down = q
-
-//
-//r3_down = q
-
-//quit
-back_up = q
-guide = q
-
-//seek 1 minute forward
-up_down = up
-
-//seek 1 minute backward
-down_down = down
-
-//seek 5 seconds backward
+# D-Pad: Seeking
+# up / down: seek 60 seconds forward / backward
+up = up
+down = down
+# left / right: seek 5 seconds backward / forward
 left = left
-
-//seek 5 seconds forward
 right = right
 
-//
-//left_analog_up = w
+# Action buttons
+# A / B: Play / Pause (space)
+a = space
+b = space
+# X: Volume Up (0 in mpv)
+x = 0
+# Y: Volume Down (9 in mpv)
+y = 9
 
-//
-//left_analog_down = s
+# Shoulder buttons
+# L1 / R1: Speed down / speed up by 10% ([ and ] in mpv)
+l1 = [
+r1 = ]
+# L2 / R2: Half / double playback speed ({ and } in mpv)
+l2 = {
+r2 = }
 
-//
-//left_analog_left = a
-
-//
-//left_analog_right = d
-
-//
-//right_analog_up = pageup
-
-//
-//right_analog_down = pagedown
-
-//
-//right_analog_left = [
-
-//
-//right_analog_right = ]
+# System buttons
+# Start: Play / Pause (space)
+start = space
+# Select: Mute / Unmute (m in mpv)
+select = m
+# Back / Guide / Stick click: Quit mpv (q)
+back = q
+guide = q
+l3 = q
+r3 = q

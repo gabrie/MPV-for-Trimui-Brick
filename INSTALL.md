@@ -43,14 +43,13 @@
 
 | 相对路径 | 改动类型 | 改动细节与原因 |
 | :--- | :--- | :--- |
-| `Emus/VIDEOS/mpv.sh` | 修正 Bug | 修复第 3 行环境变量 `export LD_LIBRARY_PATH=...:LD_LIBRARY_PATH` 丢失 `$` 的笔误，改为 `:$LD_LIBRARY_PATH`。 |
-| `Emus/VIDEOS/mpv.sh` | 解耦自包含 | 移除对外部 `/mnt/SDCARD/Apps/PortMaster/...` 的依赖，将 `gptokeyb2` 与 `gamecontrollerdb.txt` 移入 `Emus/VIDEOS/` 自包含，并补全官方要求的 `export SDL_GAMECONTROLLERCONFIG_FILE="$progdir/gamecontrollerdb.txt"`。 |
+| `Emus/VIDEOS/mpv.sh` | 修正 Bug | 修复第 3 行环境变量 `export LD_LIBRARY_PATH=...:LD_LIBRARY_PATH` 丢失 `$` 的笔误，改为 `:$LD_LIBRARY_PATH`；启动前若存在系统 `/usr/lib/gamecontrollerdb.txt` 则自动合并，确保 TrimUI 专用手柄映射生效。 |
+| `Emus/VIDEOS/mpv.sh` | 解耦自包含 | 移除对外部 `/mnt/SDCARD/Apps/PortMaster/...` 的依赖，将 `gptokeyb2` 与 `gamecontrollerdb.txt` 移入 `Emus/VIDEOS/` 自包含，并输出 `gptokeyb2.log` 以便排错。 |
 | `Emus/VIDEOS/mpv.sh` | 清理孤儿行 | 删除原版末尾未生效且无法执行的孤儿参数行（`--script=...metadata_osd.lua` 与 showcqt 音频可视化，原版 scripts/ 并不存在该 lua 脚本），启动命令简化为稳定单行。 |
-| `Emus/VIDEOS/keys.gptk` | 增强映射 | 补齐 X/Y 按键的音量映射：`x = 0` (音量 +)、`y = 9` (音量 -)。其余原有键位保持原样。 |
+| `Emus/VIDEOS/keys.gptk` | 修正与补齐 | 修复 `up_down`/`down_down` 等旧语法为标准 `up`/`down`，快进快退立即生效；修正暂停键为 `space`；补齐 X/Y 音量（0/9）、L1/R1 播放倍速调整（[/]）以及 Select 静音（m）。 |
 | `Emus/VIDEOS/nas_config.ini` | 新增 | 局域网 NAS (DLNA/UPnP) 播放配置文件（填入 IP 与端口）。 |
 | `Emus/VIDEOS/sync_nas.sh` | 新增 | 纯 POSIX sh + curl DLNA 内容目录扫描脚本，支持递归抓取视频流并生成 m3u8。 |
 | `Roms/VIDEOS/🔄 刷新 NAS 列表.launch` | 新增 | 原生界面一键同步 NAS 视频列表快捷方式。 |
-| `Roms/VIDEOS/nas-http-example.m3u8` | 新增 | 提供针对 NAS HTTP 视频流的示例播放列表模板。 |
 | `Roms/VIDEOS/README_ROMS.txt` | 新增 | 本地与 NAS 片源目录使用指引。 |
 | `INSTALL.md` / `TEST.md` | 新增 | 完整的安装使用指南与真机 7 步验收协议表格。 |
 | `LICENSE` / `LICENSE.gpl-2.0` / `SOURCES.md` / `THIRD_PARTY_NOTICES.md` | 新增/齐备 | 遵循 GPL-3.0、GPL-2.0 及 New BSD 协议的完整开源合规文件。 |
@@ -61,13 +60,15 @@
 
 | 手柄按键 | 映射动作 | mpv 行为 |
 | :--- | :--- | :--- |
-| **A / B / Start** | Enter | 播放 / 暂停 |
+| **A / B / Start** | Space | 播放 / 暂停 |
 | **方向键 左 / 右** | Left / Right | 快退 5 秒 / 快进 5 秒 |
 | **方向键 下 / 上** | Down / Up | 快退 60 秒 / 快进 60 秒 |
-| **L1 / R1** | b / n | 上一个视频 / 下一个视频 |
-| **X** (新增) | 0 | 音量 + |
-| **Y** (新增) | 9 | 音量 - |
-| **Menu 键** | q | 退出播放器（自动保存断点位置） |
+| **L1 / R1** | [ / ] | 播放速度减慢 / 加快 10% |
+| **L2 / R2** | { / } | 播放速度减半 / 翻倍 (0.5x / 2.0x) |
+| **X** | 0 | 音量 + |
+| **Y** | 9 | 音量 - |
+| **Select** | m | 静音 / 恢复静音 |
+| **Menu 键 / Back** | q | 退出播放器（自动保存断点位置） |
 | **Start + Select** | 退出信号 | gptokeyb2 内置强制退出组合键 |
 | **Mode 键长按 (1.2s)** | BTN_MODE | 通过 thd 守护进程强制终止 mpv 进程 |
 
