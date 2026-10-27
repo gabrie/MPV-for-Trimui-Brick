@@ -1,7 +1,7 @@
 # mpv for TrimUI Brick Stock OS — 安装与使用说明
 
 本软件包将 [CrossMix-OS](https://github.com/cizia64/CrossMix-OS) 中的 mpv 视频播放器提取并打包为适用于 **TrimUI Brick 原装系统（官方 Stock OS）** 的免刷机扩展包。
-遵循纯 SD 卡文件覆盖机制，**不刷机、不碰固件、不动 eMMC 分区**。
+遵循纯 SD 卡文件覆盖机制，**不刷机、不碰固件、不动 eMMC 分区**。支持本地视频与局域网 NAS (DLNA / UPnP) 无线串流播放。
 
 ---
 
@@ -13,8 +13,8 @@
 ---
 
 ## 2. 空间占用与容量要求
-- **`System/lib/` 共享库体积**：约 **159.69 MB**（167,444,463 字节，共 332 个库文件）
-- **本安装包总大小**：约 **166.50 MB**（174,588,751 字节，共 359 个文件）
+- **`System/lib/` 共享库体积**：约 **159.69 MB**（332 个库文件）
+- **本安装包总大小**：解压后约 **166.5 MB**，压缩包约 **38 MB**
 - **安装前检查**：请确保 TrimUI Brick 的 MicroSD 卡至少有 **200 MB** 以上的剩余空间。
 
 ---
@@ -26,15 +26,16 @@
    - 将 `mpv-stock/` 目录下的所有子文件夹（`Emus/`、`Roms/`、`Imgs/`、`System/`、`Icons/`、`Backgrounds/`）直接复制到 MicroSD 卡的根目录；
    - 或者直接将 `mpv-stock.zip` 解压到 MicroSD 卡的根目录。
    - **注意（重要）**：系统提示文件夹冲突时，选择**合并（Merge）**，绝对不要删除或整包替换 SD 卡上原有的 `System/lib/` 目录！
-3. **放入视频**：
-   - 将要播放的本地视频文件（如 `.mp4`, `.mkv`, `.avi` 等）放入 SD 卡的 `/mnt/SDCARD/Roms/VIDEOS/` 目录中；
-   - 若要播放 NAS 网络串流，参考 `Roms/VIDEOS/nas-http-example.m3u8` 模板填入您 NAS 的 HTTP 地址即可。
-4. **刷新游戏列表**：
+3. **放入视频或配置 NAS**：
+   - **本地播放**：将视频文件（如 `.mp4`, `.mkv`, `.avi` 等）放入 SD 卡的 `/mnt/SDCARD/Roms/VIDEOS/` 目录中。
+   - **局域网 NAS 播放**：在掌机连入 WiFi 后，编辑 `Emus/VIDEOS/nas_config.ini`，填写 NAS 的局域网 IP 与端口（群晖等标准 DLNA/UPnP 端口通常为 `50001`）。
+4. **刷新视频列表**：
    - 将 SD 卡插回 TrimUI Brick，开机进入原装系统；
-   - 在主界面或游戏列表界面，按掌机 **Menu 键** -> 选择 **Refresh Roms**（刷新 ROM 列表）；
+   - 在主界面按掌机 **Menu 键** -> 选择 **Refresh Roms**（刷新 ROM 列表）；
    - 刷新完成后，主系统列表会出现 **「视频 / VIDEOS」** 图标。
 5. **开始播放**：
-   - 进入「视频」系统，即可像浏览游戏一样选择视频文件，点击即可唤起 mpv 播放器播放。
+   - **本地视频**：直接选中视频文件点击播放。
+   - **NAS 视频同步与播放**：进入「视频」分类，点击 **【🔄 刷新 NAS 列表】**。掌机将自动扫描局域网 NAS 并生成播放列表，完成后即可直接无线流媒体播放！
 
 ---
 
@@ -46,8 +47,11 @@
 | `Emus/VIDEOS/mpv.sh` | 解耦自包含 | 移除对外部 `/mnt/SDCARD/Apps/PortMaster/...` 的依赖，将 `gptokeyb2` 与 `gamecontrollerdb.txt` 移入 `Emus/VIDEOS/` 自包含，并补全官方要求的 `export SDL_GAMECONTROLLERCONFIG_FILE="$progdir/gamecontrollerdb.txt"`。 |
 | `Emus/VIDEOS/mpv.sh` | 清理孤儿行 | 删除原版末尾未生效且无法执行的孤儿参数行（`--script=...metadata_osd.lua` 与 showcqt 音频可视化，原版 scripts/ 并不存在该 lua 脚本），启动命令简化为稳定单行。 |
 | `Emus/VIDEOS/keys.gptk` | 增强映射 | 补齐 X/Y 按键的音量映射：`x = 0` (音量 +)、`y = 9` (音量 -)。其余原有键位保持原样。 |
+| `Emus/VIDEOS/nas_config.ini` | 新增 | 局域网 NAS (DLNA/UPnP) 播放配置文件（填入 IP 与端口）。 |
+| `Emus/VIDEOS/sync_nas.sh` | 新增 | 纯 POSIX sh + curl DLNA 内容目录扫描脚本，支持递归抓取视频流并生成 m3u8。 |
+| `Roms/VIDEOS/🔄 刷新 NAS 列表.launch` | 新增 | 原生界面一键同步 NAS 视频列表快捷方式。 |
 | `Roms/VIDEOS/nas-http-example.m3u8` | 新增 | 提供针对 NAS HTTP 视频流的示例播放列表模板。 |
-| `Roms/VIDEOS/README_ROMS.txt` | 新增 | 片源目录使用指引。 |
+| `Roms/VIDEOS/README_ROMS.txt` | 新增 | 本地与 NAS 片源目录使用指引。 |
 | `INSTALL.md` / `TEST.md` | 新增 | 完整的安装使用指南与真机 7 步验收协议表格。 |
 | `LICENSE` / `LICENSE.gpl-2.0` / `SOURCES.md` / `THIRD_PARTY_NOTICES.md` | 新增/齐备 | 遵循 GPL-3.0、GPL-2.0 及 New BSD 协议的完整开源合规文件。 |
 
