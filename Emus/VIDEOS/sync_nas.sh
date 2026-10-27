@@ -18,10 +18,13 @@ export LD_LIBRARY_PATH="/mnt/SDCARD/System/lib:/usr/trimui/lib:$LD_LIBRARY_PATH"
 
 progdir="/mnt/SDCARD/Emus/VIDEOS"
 romdir="/mnt/SDCARD/Roms/VIDEOS"
-config_file="$progdir/nas_config.ini"
 
-if [ ! -f "$config_file" ]; then
-    log "ERROR: nas_config.ini not found at $config_file!"
+if [ -f "$romdir/nas_config.ini" ]; then
+    config_file="$romdir/nas_config.ini"
+elif [ -f "$progdir/nas_config.ini" ]; then
+    config_file="$progdir/nas_config.ini"
+else
+    log "ERROR: nas_config.ini not found in $romdir or $progdir!"
     exit 1
 fi
 

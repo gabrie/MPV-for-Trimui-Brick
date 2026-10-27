@@ -28,7 +28,7 @@
    - **注意（重要）**：系统提示文件夹冲突时，选择**合并（Merge）**，绝对不要删除或整包替换 SD 卡上原有的 `System/lib/` 目录！
 3. **放入视频或配置 NAS**：
    - **本地播放**：将视频文件（如 `.mp4`, `.mkv`, `.avi` 等）放入 SD 卡的 `/mnt/SDCARD/Roms/VIDEOS/` 目录中。
-   - **局域网 NAS 播放**：在掌机连入 WiFi 后，编辑 `Emus/VIDEOS/nas_config.ini`，填写 NAS 的局域网 IP 与端口（群晖等标准 DLNA/UPnP 端口通常为 `50001`）。
+   - **局域网 NAS 播放**：在掌机连入 WiFi 后，直接编辑 `Roms/VIDEOS/nas_config.ini`，填写 NAS 的局域网 IP、端口与目标文件夹（群晖等标准 DLNA/UPnP 端口通常为 `50001`）。
 4. **刷新视频列表**：
    - 将 SD 卡插回 TrimUI Brick，开机进入原装系统；
    - 在主界面按掌机 **Menu 键** -> 选择 **Refresh Roms**（刷新 ROM 列表）；
@@ -47,7 +47,7 @@
 | `Emus/VIDEOS/mpv.sh` | 解耦自包含 | 移除对外部 `/mnt/SDCARD/Apps/PortMaster/...` 的依赖，将 `gptokeyb2` 与 `gamecontrollerdb.txt` 移入 `Emus/VIDEOS/` 自包含，并输出 `gptokeyb2.log` 以便排错。 |
 | `Emus/VIDEOS/mpv.sh` | 清理孤儿行 | 删除原版末尾未生效且无法执行的孤儿参数行（`--script=...metadata_osd.lua` 与 showcqt 音频可视化，原版 scripts/ 并不存在该 lua 脚本），启动命令简化为稳定单行。 |
 | `Emus/VIDEOS/keys.gptk` | 修正与补齐 | 修复 `up_down`/`down_down` 等旧语法为标准 `up`/`down`，快进快退立即生效；修正暂停键为 `space`；补齐 X/Y 音量（0/9）、L1/R1 播放倍速调整（[/]）以及 Select 静音（m）。 |
-| `Emus/VIDEOS/nas_config.ini` | 新增 | 局域网 NAS (DLNA/UPnP) 播放配置文件（填入 IP 与端口）。 |
+| `Roms/VIDEOS/nas_config.ini` | 新增 | 局域网 NAS (DLNA/UPnP) 播放配置文件（位于视频目录下，方便直接填入 IP、端口与目标文件夹）。 |
 | `Emus/VIDEOS/sync_nas.sh` | 新增 | 纯 POSIX sh + curl DLNA 内容目录扫描脚本，支持递归抓取视频流并生成 m3u8。 |
 | `Roms/VIDEOS/🔄 刷新 NAS 列表.launch` | 新增 | 原生界面一键同步 NAS 视频列表快捷方式。 |
 | `Roms/VIDEOS/README_ROMS.txt` | 新增 | 本地与 NAS 片源目录使用指引。 |
