@@ -1,0 +1,19 @@
+# Enforce Unix LF line endings for all text and script files
+* text=auto eol=lf
+*.sh text eol=lf
+*.json text eol=lf
+*.conf text eol=lf
+*.gptk text eol=lf
+*.txt text eol=lf
+*.m3u8 text eol=lf
+*.md text eol=lf
+
+# Binary files
+*.png binary
+*.ttf binary
+*.so binary
+*.so.* binary
+mpv binary
+thd binary
+7zz binary
+gptokeyb2 binary
