@@ -13,10 +13,10 @@ right = right
 # A / B: Play / Pause (space)
 a = space
 b = space
-# X: Volume Up (0 in mpv)
-x = 0
-# Y: Volume Down (9 in mpv)
-y = 9
+# X: Zoom / Fill to Vertical Axis (短边/竖轴拉伸撑满)
+x = x
+# Y: Zoom / Fill to Horizontal Axis (长边/横轴拉伸撑满)
+y = y
 
 # Shoulder buttons
 # L1 / R1: Speed down / speed up by 10% ([ and ] in mpv)
