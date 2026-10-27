@@ -8,7 +8,7 @@ extension="${@##*.}"
 
 cd "$progdir"
 
-# 处理 .launch 脚本 (例如 "🔄 刷新 NAS 列表.launch")
+# 处理 .launch 脚本 (例如 "刷新 NAS 列表.launch")
 if [ "$extension" = "launch" ]; then
   sh "$1"
   exit

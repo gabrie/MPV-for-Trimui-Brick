@@ -35,7 +35,7 @@
    - 刷新完成后，主系统列表会出现 **「视频 / VIDEOS」** 图标。
 5. **开始播放**：
    - **本地视频**：直接选中视频文件点击播放。
-   - **NAS 视频同步与播放**：进入「视频」分类，点击 **【🔄 刷新 NAS 列表】**。掌机将自动扫描局域网 NAS 并生成播放列表，完成后即可直接无线流媒体播放！
+   - **NAS 视频同步与播放**：进入「视频」分类，点击 **【刷新 NAS 列表】**。掌机将自动扫描局域网 NAS 并生成播放列表，完成后即可直接无线流媒体播放！
 
 ---
 
@@ -49,7 +49,7 @@
 | `Emus/VIDEOS/keys.gptk` | 修正与补齐 | 修复 `up_down`/`down_down` 等旧语法为标准 `up`/`down`，快进快退立即生效；修正暂停键为 `space`；补齐 X/Y 音量（0/9）、L1/R1 播放倍速调整（[/]）以及 Select 静音（m）。 |
 | `Roms/VIDEOS/nas_config.ini` | 新增 | 局域网 NAS (DLNA/UPnP) 播放配置文件（位于视频目录下，方便直接填入 IP、端口与目标文件夹）。 |
 | `Emus/VIDEOS/sync_nas.sh` | 新增 | 纯 POSIX sh + curl DLNA 内容目录扫描脚本，支持递归抓取视频流并生成 m3u8。 |
-| `Roms/VIDEOS/🔄 刷新 NAS 列表.launch` | 新增 | 原生界面一键同步 NAS 视频列表快捷方式。 |
+| `Roms/VIDEOS/刷新 NAS 列表.launch` | 新增 | 原生界面一键同步 NAS 视频列表快捷方式。 |
 | `Roms/VIDEOS/README_ROMS.txt` | 新增 | 本地与 NAS 片源目录使用指引。 |
 | `INSTALL.md` / `TEST.md` | 新增 | 完整的安装使用指南与真机 7 步验收协议表格。 |
 | `LICENSE` / `LICENSE.gpl-2.0` / `SOURCES.md` / `THIRD_PARTY_NOTICES.md` | 新增/齐备 | 遵循 GPL-3.0、GPL-2.0 及 New BSD 协议的完整开源合规文件。 |
